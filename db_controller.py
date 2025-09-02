@@ -1,9 +1,91 @@
-# Arquivo criado somente para fins de teste, deve ser substituido pelo o arquivo db_controller.py correto
-def salvar_nota(aluno, valor):
-    print(f"Nota salva: {aluno} - {valor}")
+import sqlite3
 
-def salvar_feedback(aluno, texto):
-    print(f"Feedback salvo: {aluno} - {texto}")
+def init_db():
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    # Tabela de estudantes
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT,
+            grades TEXT,
+            goals TEXT,
+            feedback TEXT,
+            data_creacao TEXT
+        )
+    ''')
+    # Tabela de usuários
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rol TEXT,
+            email TEXT,
+            nome TEXT,
+            password TEXT,
+            data_creacao TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
-def salvar_meta(aluno, descricao):
-    print(f"Meta salva: {aluno} - {descricao}")
+def insert_student(nome, grades, goals, feedback, data_creacao):
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO students (nome, grades, goals, feedback, data_creacao) VALUES (?, ?, ?, ?, ?)',
+                   (nome, grades, goals, feedback, data_creacao))
+    conn.commit()
+    conn.close()
+
+def get_all_students():
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM students')
+    students = cursor.fetchall()
+    conn.close()
+    return students
+
+def insert_user(rol, email, nome, password, data_creacao):
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO users (rol, email, nome, password, data_creacao) VALUES (?, ?, ?, ?, ?)',
+                   (rol, email, nome, password, data_creacao))
+    conn.commit()
+    conn.close()
+
+def get_all_users():
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users')
+    users = cursor.fetchall()
+    conn.close()
+    return users
+
+def create_forms_table():
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS forms (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER,
+            answers TEXT,
+            data_creacao TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+def insert_form(student_id, answers, data_creacao):
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO forms (student_id, answers, data_creacao) VALUES (?, ?, ?)',
+                   (student_id, answers, data_creacao))
+    conn.commit()
+    conn.close()
+
+def get_all_forms():
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM forms')
+    forms = cursor.fetchall()
+    conn.close()
+    return forms

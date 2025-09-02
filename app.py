@@ -6,9 +6,6 @@ import db_controller
 app = Flask(__name__)
 CORS(app)
 
-# Inicializa la BD si no existe
-db_controller.init_db()
-
 @app.route('/api/students', methods=['POST'])
 def add_student():
     data = request.get_json()
@@ -46,6 +43,24 @@ def get_users():
     result = [
         {"id": u[0], "rol": u[1], "email": u[2], "nome": u[3], "password": u[4], "data_creacao": u[5]}
         for u in users
+    ]
+    return jsonify(result)
+
+@app.route('/api/forms', methods=['POST'])
+def add_form():
+    data = request.get_json()
+    student_id = data['student_id']
+    answers = data['answers']
+    data_criacao = data.get('data_criacao', '')
+    db_controller.insert_form(student_id, answers, data_criacao)
+    return jsonify({"message": "Form inserted successfully"}), 201
+
+@app.route('/api/forms', methods=['GET'])
+def get_forms():
+    forms = db_controller.get_all_forms()
+    result = [
+        {"id": f[0], "student_id": f[1], "answers": f[2], "data_criacao": f[3]}
+        for f in forms
     ]
     return jsonify(result)
 
