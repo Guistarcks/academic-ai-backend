@@ -1,3 +1,5 @@
+
+
 import sqlite3
 
 def init_db():
@@ -19,7 +21,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             rol TEXT,
-            email TEXT,
+            email TEXT UNIQUE NOT NULL,
             nome TEXT,
             password TEXT,
             data_creacao TEXT
@@ -27,6 +29,22 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
+
+def get_user_by_id(user_id):
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    return user
+    
+def get_user_by_email(email):
+    conn = sqlite3.connect('academicia.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+    user = cursor.fetchone()
+    conn.close()
+    return user
 
 def insert_student(nome, grades, goals, feedback, data_creacao):
     conn = sqlite3.connect('academicia.db')
@@ -47,10 +65,15 @@ def get_all_students():
 def insert_user(rol, email, nome, password, data_creacao):
     conn = sqlite3.connect('academicia.db')
     cursor = conn.cursor()
-    cursor.execute('INSERT INTO users (rol, email, nome, password, data_creacao) VALUES (?, ?, ?, ?, ?)',
-                   (rol, email, nome, password, data_creacao))
-    conn.commit()
-    conn.close()
+    try:
+        cursor.execute('INSERT INTO users (rol, email, nome, password, data_creacao) VALUES (?, ?, ?, ?, ?)',
+                       (rol, email, nome, password, data_creacao))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
 
 def get_all_users():
     conn = sqlite3.connect('academicia.db')

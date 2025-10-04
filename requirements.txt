@@ -1,0 +1,13 @@
+# Flask y extensiones
+Flask==2.3.3
+flask-cors==4.0.0
+Werkzeug==2.3.7
+
+# Para autenticación JWT
+PyJWT==2.8.0
+
+# Base de datos
+# SQLite viene incluido con Python
+
+# Otras dependencias opcionales
+python-dotenv==1.0.0
