@@ -144,6 +144,57 @@ def get_all_users():
         })
     return jsonify(result), 200
 
+@app.route('/api/users/<int:user_id>', methods=['PUT'])
+@token_required
+def update_user(user_id):
+    """Endpoint para actualizar un usuario (requiere autenticación)"""
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"message": "No se enviaron datos"}), 400
+    
+    # Obtener el usuario actual
+    user = db_controller.get_user_by_id(user_id)
+    if not user:
+        return jsonify({"message": "Usuario no encontrado"}), 404
+    
+    # Preparar datos para actualizar
+    nome = data.get('nome', user[3])
+    rol = data.get('rol', user[1])
+    email = data.get('email', user[2])
+    
+    # Si se envía una nueva contraseña, hashearla
+    if data.get('password') and data.get('password').strip():
+        password = generate_password_hash(data['password'])
+    else:
+        password = user[4]  # Mantener la contraseña actual
+    
+    # Actualizar en la base de datos
+    success = db_controller.update_user(user_id, rol, email, nome, password)
+    
+    if not success:
+        return jsonify({"message": "Error al actualizar el usuario (email duplicado)"}), 409
+    
+    return jsonify({"message": "Usuario actualizado exitosamente"}), 200
+
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+@token_required
+def delete_user(user_id):
+    """Endpoint para eliminar un usuario (requiere autenticación)"""
+    
+    # Verificar que el usuario existe
+    user = db_controller.get_user_by_id(user_id)
+    if not user:
+        return jsonify({"message": "Usuario no encontrado"}), 404
+    
+    # Eliminar el usuario
+    success = db_controller.delete_user(user_id)
+    
+    if not success:
+        return jsonify({"message": "Error al eliminar el usuario"}), 500
+    
+    return jsonify({"message": "Usuario eliminado exitosamente"}), 200
+
 @app.route('/api/forms', methods=['POST'])
 @token_required
 def add_form():
@@ -159,6 +210,48 @@ def get_forms():
     forms = db_controller.get_all_forms()
     result = [{"id": f[0], "name": f[1], "data": json.loads(f[2])} for f in forms]
     return jsonify(result)
+
+@app.route('/api/historicos', methods=['POST'])
+@token_required
+def add_historico():
+    """Endpoint para guardar un histórico de análisis (requiere autenticación)"""
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"message": "No se enviaron datos"}), 400
+    
+    nome = data.get('nome', '')
+    metas = data.get('metas', '')
+    feedback = data.get('feedback', '')
+    analysisResult = data.get('analysisResult', '')
+    data_creacao = data.get('data_creacao', '')
+    
+    if not nome or not metas or not feedback or not analysisResult:
+        return jsonify({"message": "Todos los campos son requeridos"}), 400
+    
+    success = db_controller.insert_historico(nome, metas, feedback, analysisResult, data_creacao)
+    
+    if not success:
+        return jsonify({"message": "Error al guardar el histórico"}), 500
+    
+    return jsonify({"message": "Histórico guardado exitosamente"}), 201
+
+@app.route('/api/historicos', methods=['GET'])
+@token_required
+def get_historicos():
+    """Endpoint para obtener todos los históricos (requiere autenticación)"""
+    historicos = db_controller.get_all_historicos()
+    result = []
+    for h in historicos:
+        result.append({
+            "id": h[0],
+            "nome": h[1],
+            "metas": h[2],
+            "feedback": h[3],
+            "analysisResult": h[4],
+            "data_creacao": h[5]
+        })
+    return jsonify(result), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
